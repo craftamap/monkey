@@ -26,7 +26,7 @@ const (
 	LT = "<"
 	GT = ">"
 
-	EQ = "=="
+	EQ     = "=="
 	NOT_EQ = "!="
 
 	// Delimiters
@@ -45,6 +45,8 @@ const (
 	IF       = "IF"
 	ELSE     = "ELSE"
 	RETURN   = "RETURN"
+
+	STRING = "STRING"
 )
 
 var keywords = map[string]TokenType{

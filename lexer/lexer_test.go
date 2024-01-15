@@ -25,6 +25,9 @@ if (5 < 10) {
 
 10 == 10;
 10 != 9;
+
+"foobar"
+"foo bar"
 `
 
 	tests := []struct {
@@ -93,7 +96,7 @@ if (5 < 10) {
 		{token.ELSE, "else"},
 		{token.LBRACE, "{"},
 		{token.RETURN, "return"},
-		{token.TRUE, "false"},
+		{token.FALSE, "false"},
 		{token.SEMICOLON, ";"},
 		{token.RBRACE, "}"},
 		{token.INT, "10"},
@@ -104,6 +107,8 @@ if (5 < 10) {
 		{token.NOT_EQ, "!="},
 		{token.INT, "9"},
 		{token.SEMICOLON, ";"},
+        {token.STRING, "foobar"},
+        {token.STRING, "foo bar"},
 		{token.EOF, ""},
 	}
 	l := New(input)
