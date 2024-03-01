@@ -9,12 +9,15 @@ import (
 
 var True = &object.Boolean{Value: true}
 var False = &object.Boolean{Value: false}
+var Null = &object.Null{}
 
 const StackSize = 2048
+const GlobalsSize = 65535
 
 type VM struct {
-	constants    []object.Object
 	instructions code.Instructions
+	constants    []object.Object
+	globals      []object.Object
 
 	stack []object.Object
 	sp    int // always points to the next value. Top of stack is stack[sp - 1]
@@ -24,10 +27,17 @@ func New(bytecode *compiler.Bytecode) *VM {
 	return &VM{
 		instructions: bytecode.Instructions,
 		constants:    bytecode.Constants,
+		globals:      make([]object.Object, GlobalsSize),
 
 		stack: make([]object.Object, StackSize),
 		sp:    0,
 	}
+}
+
+func NewWithGlobalsStore(bytecode *compiler.Bytecode, s []object.Object) *VM {
+	vm := New(bytecode)
+	vm.globals = s
+	return vm
 }
 
 func (vm *VM) Run() error {
@@ -86,6 +96,23 @@ func (vm *VM) Run() error {
 			if !isTruthy(condition) {
 				ip = pos - 1
 			}
+		case code.OpNull:
+			err := vm.push(Null)
+			if err != nil {
+				return err
+			}
+		case code.OpSetGlobal:
+			globalIndex := code.ReadUint16(vm.instructions[ip+1:])
+			ip += 2
+
+			vm.globals[globalIndex] = vm.pop()
+		case code.OpGetGlobal:
+			globalIndex := code.ReadUint16(vm.instructions[ip+1:])
+			ip += 2
+			err := vm.push(vm.globals[globalIndex])
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -109,6 +136,8 @@ func (vm *VM) executeBangOperator() error {
 	case True:
 		return vm.push(False)
 	case False:
+		return vm.push(True)
+	case Null:
 		return vm.push(True)
 	default:
 		return vm.push(False)
@@ -229,6 +258,8 @@ func isTruthy(obj object.Object) bool {
 	switch obj := obj.(type) {
 	case *object.Boolean:
 		return obj.Value
+	case *object.Null:
+		return false
 	default:
 		return true
 	}
